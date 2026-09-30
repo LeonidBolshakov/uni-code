@@ -10,7 +10,7 @@ class Unicode:
 
     @staticmethod
     def get_name_by_character(char: str) -> str:
-        return unicodedata.name(char)
+        return unicodedata.name(char, "Без имени")
 
     @staticmethod
     def is_one_symbol(symbol: str) -> bool:

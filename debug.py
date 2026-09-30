@@ -102,7 +102,7 @@ def zalgo():
     print(corrupted_text)
 
 
-def no_print_and_controls_simbols():
+def no_print_and_controls_simbols() -> None:
     no_print_simbols: list[str] = ["\0", "\t", "\n", "\r", "\x7f"]
     control_simbols: list[str] = [
         "",
@@ -113,6 +113,8 @@ def no_print_and_controls_simbols():
 
     text = "A\tB\nC\u00a0D\u200bE"
     print(text)
+    print('A"\u00ad"B')
+    print("AЯ 😀漢")
 
 
 # ya_with_point()
