@@ -19,7 +19,6 @@ from PyQt6 import uic
 
 from unicode_class import Unicode
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -60,7 +59,7 @@ class Window(QMainWindow):
 
         uic.loadUi(str(PROJECT_ROOT / "unicode.ui"), self)
         self.connects()
-        self.tune_widgets()
+        self.load_fonts()
         self.char_input_sheet = self.txt_char_input.styleSheet()
         self.char_in_utf_sheet = self.txt_char_in_utf.styleSheet()
         self.char_message_sheet = self.txt_char_message.styleSheet()
@@ -81,7 +80,7 @@ class Window(QMainWindow):
         self.btn_clear.clicked.connect(self.on_btn_clear)
         self.btn_exit.clicked.connect(self.on_btn_exit)
 
-    def tune_widgets(self) -> None:
+    def load_fonts(self) -> None:
         """Загрузить шрифты и назначить семейства для эмодзи и основного текста.
 
         Регистрация семейства эмодзи действует на всё приложение.
@@ -97,6 +96,8 @@ class Window(QMainWindow):
             str(PROJECT_ROOT / "fonts" / "JetBrainsMono-Regular.ttf"), "JetBrains Mono"
         )
         self.txt_text_input.setFont(QFont(font_family))
+        self.txt_char_input.setFont(QFont(font_family))
+        self.txt_char_in_utf.setFont(QFont(font_family))
 
     @staticmethod
     def load_font_and_get_family(font_path: str, font_family_name: str) -> str:

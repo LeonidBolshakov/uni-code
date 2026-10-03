@@ -1,4 +1,5 @@
 """Контракты загрузки шрифтов и запуска/завершения приложения."""
+
 import importlib
 import importlib.util
 import runpy
@@ -11,10 +12,15 @@ from window_class import Window
 ROOT = Path(__file__).resolve().parents[1]
 
 
-@pytest.mark.parametrize("font_id, families, error", [
-    (-1, [], "Не удалось загрузить"), (17, ["Other"], "нет семейства"),
-    (17, [], "нет семейства"), (17, ["Expected", "Other"], None),
-])
+@pytest.mark.parametrize(
+    "font_id, families, error",
+    [
+        (-1, [], "Не удалось загрузить"),
+        (17, ["Other"], "нет семейства"),
+        (17, [], "нет семейства"),
+        (17, ["Expected", "Other"], None),
+    ],
+)
 def test_font_loader(monkeypatch, font_id, families, error):
     database = Mock()
     database.addApplicationFont.return_value = font_id
@@ -43,7 +49,7 @@ def test_tune_widgets_registers_emoji_and_sets_text_font(window, monkeypatch, tm
     monkeypatch.setattr(window, "load_font_and_get_family", loader)
     database = Mock()
     monkeypatch.setattr(module, "QFontDatabase", database)
-    module.Window.tune_widgets(window)
+    module.Window.load_fonts(window)
     database.addApplicationEmojiFontFamily.assert_called_once_with("Noto Color Emoji")
     assert window.txt_text_input.font().family() == "JetBrains Mono"
     assert loader.call_count == 2
@@ -53,10 +59,13 @@ def test_tune_widgets_registers_emoji_and_sets_text_font(window, monkeypatch, tm
     ]
 
 
-@pytest.mark.parametrize("filename, family", [
-    ("NotoColorEmoji.ttf", "Noto Color Emoji"),
-    ("JetBrainsMono-Regular.ttf", "JetBrains Mono"),
-])
+@pytest.mark.parametrize(
+    "filename, family",
+    [
+        ("NotoColorEmoji.ttf", "Noto Color Emoji"),
+        ("JetBrainsMono-Regular.ttf", "JetBrains Mono"),
+    ],
+)
 def test_real_bundled_font(qapp, filename, family):
     path = ROOT / "fonts" / filename
     if not path.is_file():
@@ -85,6 +94,7 @@ def test_main_creates_shows_and_exits(monkeypatch):
 
 def test_exit_button_requests_quit(window, monkeypatch, qtbot):
     from PyQt6.QtCore import Qt
+
     app = Mock()
     monkeypatch.setattr(window_class, "QApplication", app)
     qtbot.mouseClick(window.btn_exit, Qt.MouseButton.LeftButton)
@@ -93,6 +103,7 @@ def test_exit_button_requests_quit(window, monkeypatch, qtbot):
 
 def test_script_entrypoint(monkeypatch):
     from PyQt6 import QtWidgets
+
     app = Mock()
     app.exec.return_value = 0
     factory = Mock(return_value=Mock())
@@ -105,8 +116,11 @@ def test_script_entrypoint(monkeypatch):
 
 
 def test_window_initializes_with_real_fonts(qtbot, monkeypatch):
-    missing = [name for name in ["NotoColorEmoji.ttf", "JetBrainsMono-Regular.ttf"]
-               if not (ROOT / "fonts" / name).is_file()]
+    missing = [
+        name
+        for name in ["NotoColorEmoji.ttf", "JetBrainsMono-Regular.ttf"]
+        if not (ROOT / "fonts" / name).is_file()
+    ]
     if missing:
         pytest.skip("Не приложены шрифты: " + ", ".join(missing))
     monkeypatch.chdir(ROOT)
