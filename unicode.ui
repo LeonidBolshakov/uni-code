@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>677</width>
-    <height>549</height>
+    <height>541</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -24,6 +24,32 @@
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/* Все поля: белый фон, тёмный текст */
+QPlainTextEdit,
+QLineEdit {
+    background-color: #FFFFFF;
+    color: #202124;
+}
+
+/* Поля ввода */
+QPlainTextEdit#txt_text_input,
+QLineEdit#txt_char_input,
+QPlainTextEdit#txt_char_in_utf {
+    background-color: #EFF6FF;
+}
+
+/* Заголовок и вводимый символ */
+QLabel#labelTitle,
+QLineEdit#txt_char_input {
+    color: #2F48D9;
+}
+
+/* Подсказка под символом */
+QLabel#txt_char_message {
+    color: #52606D;
+}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="minimumSize">
@@ -48,37 +74,10 @@
     <item>
      <widget class="QLabel" name="labelTitle">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
-      </property>
-      <property name="palette">
-       <palette>
-        <active>
-         <colorrole role="WindowText">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>47</red>
-            <green>72</green>
-            <blue>217</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </active>
-        <inactive>
-         <colorrole role="WindowText">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>47</red>
-            <green>72</green>
-            <blue>217</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </inactive>
-        <disabled/>
-       </palette>
       </property>
       <property name="font">
        <font>
@@ -258,8 +257,22 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <layout class="QHBoxLayout" name="layuout_char" stretch="0,0,0,0,0">
-         <item>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>Символ</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>Код символа</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
           <widget class="QLineEdit" name="txt_char_input">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -279,33 +292,6 @@
              <height>16777215</height>
             </size>
            </property>
-           <property name="palette">
-            <palette>
-             <active>
-              <colorrole role="Text">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>255</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </active>
-             <inactive>
-              <colorrole role="Text">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>255</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </inactive>
-             <disabled/>
-            </palette>
-           </property>
            <property name="font">
             <font>
              <pointsize>13</pointsize>
@@ -320,7 +306,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="1">
           <widget class="QPlainTextEdit" name="txt_char_in_utf">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
@@ -330,7 +316,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="2">
           <widget class="QPlainTextEdit" name="txt_char_in_byte">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
@@ -343,7 +329,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="3">
           <widget class="QLineEdit" name="txt_bytes_per_char">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -376,7 +362,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="4">
           <widget class="QLabel" name="label_2">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -393,35 +379,8 @@
        </item>
        <item>
         <widget class="QLabel" name="txt_char_message">
-         <property name="palette">
-          <palette>
-           <active>
-            <colorrole role="WindowText">
-             <brush brushstyle="SolidPattern">
-              <color alpha="255">
-               <red>98</red>
-               <green>131</green>
-               <blue>127</blue>
-              </color>
-             </brush>
-            </colorrole>
-           </active>
-           <inactive>
-            <colorrole role="WindowText">
-             <brush brushstyle="SolidPattern">
-              <color alpha="255">
-               <red>98</red>
-               <green>131</green>
-               <blue>127</blue>
-              </color>
-             </brush>
-            </colorrole>
-           </inactive>
-           <disabled/>
-          </palette>
-         </property>
          <property name="text">
-          <string>В первое поле можно ввести символ, во второе код символа в формате u+FFFF или U+FFFFFFFF</string>
+          <string>В первое поле можно ввести символ, во второе кодовую точку символа в формате u+FFFF или U+FFFFFF</string>
          </property>
         </widget>
        </item>
