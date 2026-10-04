@@ -1,0 +1,25 @@
+[
+  {
+    "font_family": "JetBrains Mono",
+    "font_name": "JetBrainsMono-Regular.ttf",
+    "is_main": true
+  },
+  {
+    "font_family": "Noto Sans",
+    "font_name": "NotoSans-Regular.ttf"
+  },
+  {
+    "font_family": "DejaVu Sans",
+    "font_name": "DejaVuSans.ttf"
+  },
+  {
+    "font_family": "Noto Sans Symbols 2",
+    "font_name": "NotoSansSymbols2-Regular.ttf"
+  },
+  {
+    "font_family": "Noto Color Emoji",
+    "font_name": "NotoColorEmoji.ttf",
+    "is_emoji": true,
+    "is_main": true
+  }
+]

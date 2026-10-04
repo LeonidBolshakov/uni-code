@@ -5,7 +5,7 @@ from pathlib import Path
 
 import regex
 from PyQt6.QtCore import QSignalBlocker
-from PyQt6.QtGui import QFont, QFontDatabase, QTextCursor
+from PyQt6.QtGui import QFontDatabase, QTextCursor, QFontInfo
 from PyQt6.QtWidgets import (
     QMainWindow,
     QPushButton,
@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
 from PyQt6 import uic
 
 from unicode_class import Unicode
+from fonts import Fonts
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -87,36 +88,27 @@ class Window(QMainWindow):
         Требуется Qt 6.9 или новее.
         """
 
-        font_family = self.load_font_and_get_family(
-            str(PROJECT_ROOT / "fonts" / "NotoColorEmoji.ttf"), "Noto Color Emoji"
-        )
-        QFontDatabase.addApplicationEmojiFontFamily(font_family)
+        # Загрузка шрифтов
+        loaded_fonts = Fonts(PROJECT_ROOT)
 
-        font_family = self.load_font_and_get_family(
-            str(PROJECT_ROOT / "fonts" / "JetBrainsMono-Regular.ttf"), "JetBrains Mono"
+        # Установка шрифтов эиодзи
+        QFontDatabase.setApplicationEmojiFontFamilies(
+            loaded_fonts.get_emoji_fonts_name_list()
         )
-        self.txt_text_input.setFont(QFont(font_family))
-        self.txt_char_input.setFont(QFont(font_family))
-        self.txt_char_in_utf.setFont(QFont(font_family))
+        # Установка текстовых шрифтов
+        fonts_list = loaded_fonts.get_text_fonts_name_list()
+        self.setting_text_font_widget(self.txt_text_input, fonts_list)
+        font = self.txt_text_input.font()
+
+        print("Запрошены:", font.families())
+        print("Выбрано Qt:", QFontInfo(font).family())
+        self.setting_text_font_widget(self.txt_char_input, fonts_list)
 
     @staticmethod
-    def load_font_and_get_family(font_path: str, font_family_name: str) -> str:
-        """Зарегистрировать файл шрифта и вернуть проверенное имя семейства.
-
-        Args:
-            font_path: путь к файлу шрифта.
-            font_family_name: ожидаемое имя семейства внутри файла.
-        Raises:
-            RuntimeError: файл не загружен или семейство не найдено.
-        """
-        font_id = QFontDatabase.addApplicationFont(font_path)
-        if font_id == -1:
-            raise RuntimeError(f"Не удалось загрузить шрифт {font_path}")
-        families = QFontDatabase.applicationFontFamilies(font_id)
-        if font_family_name not in families:
-            raise RuntimeError(f"В загруженном файле нет семейства {font_family_name}")
-
-        return font_family_name
+    def setting_text_font_widget(widget: QWidget, fonts_list: list[str]) -> None:
+        font = widget.font()
+        font.setFamilies(fonts_list)
+        widget.setFont(font)
 
     def on_text_input_changed(self) -> None:
         """Пересчитать графемы текста, UTF-8-байты и оба счётчика."""

@@ -27,13 +27,27 @@ echo Python: "%TEST_INTERPRETER%"
 "%TEST_INTERPRETER%" -c "import pytest, pytestqt, pytest_cov, regex; from PyQt6 import QtCore; assert QtCore.QT_VERSION >= 0x060900, 'Qt 6.9+ required'"
 if errorlevel 1 goto missing_dependencies
 
+rem Keep pytest temporary files inside this project.
+if not exist ".pytest_tmp" mkdir ".pytest_tmp"
+if not exist ".pytest_tmp\" goto temp_directory_error
+
+:select_test_temp
+set "TEST_TEMP_DIR=%CD%\.pytest_tmp\run_%RANDOM%_%RANDOM%"
+if exist "%TEST_TEMP_DIR%" goto select_test_temp
+
 set "PYTEST_QT_API=pyqt6"
 if not defined QT_QPA_PLATFORM set "QT_QPA_PLATFORM=offscreen"
-"%TEST_INTERPRETER%" -m pytest tests --cov=src --cov-branch --cov-report=term-missing --cov-report=html:reports/htmlcov --junitxml=reports/junit.xml %*
+"%TEST_INTERPRETER%" -m pytest tests --basetemp="%TEST_TEMP_DIR%" -p no:cacheprovider --cov=src --cov-branch --cov-report=term-missing --cov-report=html:reports/htmlcov --junitxml=reports/junit.xml %*
 set "TEST_EXIT_CODE=%ERRORLEVEL%"
 echo.
 echo Test exit code: %TEST_EXIT_CODE%
 echo HTML coverage: reports\htmlcov\index.html
+goto finish
+
+:temp_directory_error
+echo.
+echo Cannot create temporary directory: "%CD%\.pytest_tmp"
+set "TEST_EXIT_CODE=2"
 goto finish
 
 :missing_dependencies
