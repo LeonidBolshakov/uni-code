@@ -18,17 +18,17 @@ class Fonts:
         self.fonts_list: list[FontsList] = []
         self.text_fonts_name_list: list[str] = []
         self.emoji_fonts_name_list: list[str] = []
-        self.read_and_validation_fonts_list()
-        self.load_font_and_verify_family()
+        self._read_and_validation_fonts_list()
+        self._load_font_and_verify_family()
 
-    def read_and_validation_fonts_list(self) -> list[FontsList]:
+    def _read_and_validation_fonts_list(self) -> list[FontsList]:
 
         self.fonts_list = TypeAdapter(list[FontsList]).validate_json(
             self.fonts_list_path.read_text()
         )
         return self.fonts_list
 
-    def load_font_and_verify_family(self) -> None:
+    def _load_font_and_verify_family(self) -> None:
         for font in self.fonts_list:
             font_id = QFontDatabase.addApplicationFont(
                 str(self.fonts_directory / font.font_name)
@@ -45,12 +45,12 @@ class Fonts:
                 )
 
     def get_text_fonts_name_list(self):
-        return self.filter_list_font_names(is_emoji=False)
+        return self._filter_list_font_names(is_emoji=False)
 
     def get_emoji_fonts_name_list(self):
-        return self.filter_list_font_names(is_emoji=True)
+        return self._filter_list_font_names(is_emoji=True)
 
-    def filter_list_font_names(self, is_emoji: bool) -> list[str]:
+    def _filter_list_font_names(self, is_emoji: bool) -> list[str]:
 
         filtered_fonts_name_list: list[str] = []
         count_main = 0
