@@ -52,9 +52,10 @@ def test_load_fonts_assigns_all_families_to_both_inputs(window, monkeypatch, tmp
     monkeypatch.setattr(window_class, "Fonts", factory)
     monkeypatch.setattr(window_class, "QFontDatabase", database)
 
+    window.loaded_fonts = loaded
     LOAD_FONTS(window)
 
-    factory.assert_called_once_with(window_class.PROJECT_ROOT)
+    factory.assert_not_called()
     loaded.get_text_fonts_name_list.assert_called_once_with()
     loaded.get_emoji_fonts_name_list.assert_called_once_with()
     database.setApplicationEmojiFontFamilies.assert_called_once_with(emoji)
@@ -81,6 +82,7 @@ def test_configured_families_reach_widgets_and_emoji_registry(window, monkeypatc
     monkeypatch.setattr(window_class, "QFontDatabase", emoji_database)
     monkeypatch.setattr(window_class, "PROJECT_ROOT", tmp_path)
 
+    window.loaded_fonts = Fonts(tmp_path)
     LOAD_FONTS(window)
 
     emoji_database.setApplicationEmojiFontFamilies.assert_called_once_with(
@@ -91,6 +93,7 @@ def test_configured_families_reach_widgets_and_emoji_registry(window, monkeypatc
 
 
 def test_constructor_calls_load_fonts(qtbot, monkeypatch):
+    monkeypatch.setattr(window_class, "Fonts", Mock(spec=Fonts))
     loader = Mock()
     monkeypatch.setattr(Window, "load_fonts", loader)
     widget = Window()
@@ -191,8 +194,11 @@ def test_script_entrypoint(monkeypatch):
 
 def test_window_loads_ui_from_another_working_directory(qtbot, monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
+    loaded = Mock(spec=Fonts)
+    loaded.get_symbol_font_families.return_value = []
+    monkeypatch.setattr(window_class, "Fonts", Mock(return_value=loaded))
     monkeypatch.setattr(Window, "load_fonts", lambda self: None)
     widget = Window()
     qtbot.addWidget(widget)
     widget.txt_char_in_utf.setPlainText("U+01F600")
-    assert widget.txt_char_input.text() == "😀"
+    assert widget.txt_char_input.toPlainText() == "😀"

@@ -16,7 +16,15 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 @pytest.fixture
 def window(qtbot, monkeypatch):
     """Создать окно без зависимости тестов интерфейса от файлов шрифтов."""
+    from unittest.mock import Mock
+
+    import window_class
+    from fonts import Fonts
     from window_class import Window
+
+    loaded = Mock(spec=Fonts)
+    loaded.get_symbol_font_families.return_value = ["Test Font"]
+    monkeypatch.setattr(window_class, "Fonts", Mock(return_value=loaded))
 
     monkeypatch.setattr(Window, "load_fonts", lambda self: None)
     widget = Window()

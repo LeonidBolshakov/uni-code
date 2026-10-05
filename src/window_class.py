@@ -5,7 +5,7 @@ from pathlib import Path
 
 import regex
 from PyQt6.QtCore import QSignalBlocker
-from PyQt6.QtGui import QFontDatabase, QTextCursor, QFontInfo
+from PyQt6.QtGui import QFontDatabase, QTextCursor
 from PyQt6.QtWidgets import (
     QMainWindow,
     QPushButton,
@@ -35,9 +35,10 @@ class Window(QMainWindow):
     btn_exit: QPushButton
     txt_bytes_per_char: QLineEdit
     txt_char_category: QPlainTextEdit
+    txt_char_fonts: QPlainTextEdit
+    txt_char_input: QPlainTextEdit
     txt_char_in_byte: QPlainTextEdit
     txt_char_in_utf: QPlainTextEdit
-    txt_char_input: QLineEdit
     txt_char_message: QLabel
     txt_char_name: QPlainTextEdit
     txt_num_symbol: QLineEdit
@@ -60,6 +61,7 @@ class Window(QMainWindow):
 
         uic.loadUi(str(PROJECT_ROOT / "unicode.ui"), self)
         self.connects()
+        self.loaded_fonts = Fonts(PROJECT_ROOT)
         self.load_fonts()
         self.char_input_sheet = self.txt_char_input.styleSheet()
         self.char_in_utf_sheet = self.txt_char_in_utf.styleSheet()
@@ -88,20 +90,15 @@ class Window(QMainWindow):
         Требуется Qt 6.9 или новее.
         """
 
-        # Загрузка шрифтов
-        loaded_fonts = Fonts(PROJECT_ROOT)
-
         # Установка шрифтов эиодзи
         QFontDatabase.setApplicationEmojiFontFamilies(
-            loaded_fonts.get_emoji_fonts_name_list()
+            self.loaded_fonts.get_emoji_fonts_name_list()
         )
         # Установка текстовых шрифтов
-        fonts_list = loaded_fonts.get_text_fonts_name_list()
+        fonts_list = self.loaded_fonts.get_text_fonts_name_list()
         self.setting_text_font_widget(self.txt_text_input, fonts_list)
         font = self.txt_text_input.font()
 
-        print("Запрошены:", font.families())
-        print("Выбрано Qt:", QFontInfo(font).family())
         self.setting_text_font_widget(self.txt_char_input, fonts_list)
 
     @staticmethod
@@ -135,11 +132,11 @@ class Window(QMainWindow):
             len_grapheme=len(self.graphemes)
         )
         if grapheme_index_at_cursor is None:
-            self.txt_char_input.setText("")
+            self.txt_char_input.setPlainText("")
             self.txt_num_symbol.setText("")
             return
         self.txt_num_symbol.setText(str(grapheme_index_at_cursor + 1))
-        self.txt_char_input.setText(self.graphemes[grapheme_index_at_cursor])
+        self.txt_char_input.setPlainText(self.graphemes[grapheme_index_at_cursor])
 
     def on_char_input_changed(self) -> None:
         """Обновить оформление и характеристики содержимого поля символа.
@@ -147,8 +144,7 @@ class Window(QMainWindow):
         Проверка нескольких графем показывает предупреждение,
         но не останавливает вывод характеристик.
         """
-
-        symbol = self.txt_char_input.text()
+        symbol = self.txt_char_input.toPlainText()
         self.restore_char_initial_style_values()
         self.create_text_field_utf(symbol)
         self.validate_symbol_input(symbol)
@@ -157,6 +153,7 @@ class Window(QMainWindow):
         self.create_text_field_bytes_per_char(utf_bytes)
         self.create_text_field_char_name(symbol)
         self.create_text_field_char_category(symbol)
+        self.create_text_field_char_fonts(self.txt_char_input)
 
     def restore_char_initial_style_values(self):
         """Восстановить исходные подсказку и стили полей символа и кода."""
@@ -260,20 +257,21 @@ class Window(QMainWindow):
 
         try:
             code = int(text[2:], 16)
-            if 0xD800 <= code <= 0xDFFF:
-                self.show_utf_error(
-                    "Ввод суррогатных кодовых точек в сегменте [0xD800, 0xDFFF] запрещён"
-                )
-                return
             symbol = chr(code)
         except ValueError:
             self.show_utf_error("Кодовая точка не должна превышать U+10FFFF")
             return
+        if 0xD800 <= code <= 0xDFFF:
+            self.show_utf_error(
+                "Ввод суррогатных кодовых точек в сегменте [0xD800, 0xDFFF] запрещён"
+            )
+            return
 
         self.char_in_utf_2_char_input = True
+
         try:
             with QSignalBlocker(self.txt_char_input):
-                self.txt_char_input.setText(symbol)
+                self.txt_char_input.setPlainText(symbol)
             self.on_char_input_changed()
         finally:
             self.char_in_utf_2_char_input = False
@@ -320,7 +318,7 @@ class Window(QMainWindow):
         return False
 
     def get_grapheme_index_at_cursor(self, len_grapheme: int) -> int | None:
-        """Вернуть индекс графемы справа от курсора или None в графемы справа откурсора нет (курсор в конеце строки).
+        """Вернуть индекс графемы справа от курсора или None если графемы справа откурсора нет (курсор в конеце строки).
 
         Args:
             len_grapheme: число графем полного текущего текста.
@@ -357,6 +355,7 @@ class Window(QMainWindow):
             self.txt_char_message,
             self.txt_char_name,
             self.txt_num_symbol,
+            self.txt_char_fonts,
         ]
 
         self.clear_fields(all_fields)
@@ -384,6 +383,7 @@ class Window(QMainWindow):
             self.txt_char_message,
             self.txt_char_name,
             self.txt_num_symbol,
+            self.txt_char_fonts,
         ]
         with QSignalBlocker(self.txt_char_input):
             self.txt_char_input.clear()
@@ -403,3 +403,7 @@ class Window(QMainWindow):
                 text.setPlainText("")
             if isinstance(text, QLabel):
                 text.setText("")
+
+    def create_text_field_char_fonts(self, widget: QPlainTextEdit) -> None:
+        fonts = self.loaded_fonts.get_symbol_font_families(widget)
+        self.txt_char_fonts.setPlainText(", ".join(fonts or []))

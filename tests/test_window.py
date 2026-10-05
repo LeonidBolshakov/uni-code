@@ -33,7 +33,7 @@ def test_text_statistics(window, text, count, byte_count, hex_bytes):
      "f0 9f 91 a9 e2 80 8d f0 9f 92 bb", "WOMAN, ZERO WIDTH JOINER, PERSONAL COMPUTER", "So, Cf, So"),
 ])
 def test_symbol_details(window, symbol, codes, hex_bytes, name, category):
-    window.txt_char_input.setText(symbol)
+    window.txt_char_input.setPlainText(symbol)
     assert window.txt_char_in_utf.toPlainText() == codes
     assert window.txt_char_in_byte.toPlainText() == hex_bytes
     assert window.txt_char_name.toPlainText() == name
@@ -45,25 +45,25 @@ def test_symbol_details(window, symbol, codes, hex_bytes, name, category):
 @pytest.mark.parametrize("symbol, highlighted", [
     ("A", False), (" ", False), ("👩‍💻", False), ("e\u0301", False),
     ("\n", True), ("\t", True), ("\u200d", True),
-    ("\u00a0", True), ("\ufe0f", False), ("", False),
+    ("\u00a0", False), ("\ufe0f", False), ("", False),
 ])
 def test_printability_rule_and_style_reset(window, symbol, highlighted):
-    window.txt_char_input.setText("\u200d")
-    window.txt_char_input.setText(symbol)
+    window.txt_char_input.setPlainText("\u200d")
+    window.txt_char_input.setPlainText(symbol)
     assert ("0, 255, 255" in window.txt_char_input.styleSheet()) is highlighted
 
 
 def test_multiple_graphemes_warn_but_still_show_details(window):
-    window.txt_char_input.setText("AB")
+    window.txt_char_input.setPlainText("AB")
     assert "только один символ" in window.txt_char_message.text()
     assert window.txt_char_in_byte.toPlainText() == "41 42"
-    window.txt_char_input.setText("A")
+    window.txt_char_input.setPlainText("A")
     assert window.txt_char_message.text() == window.char_message_text
 
 
 def test_symbol_to_code_does_not_emit_code_change(window):
     spy = QSignalSpy(window.txt_char_in_utf.textChanged)
-    window.txt_char_input.setText("A")
+    window.txt_char_input.setPlainText("A")
     assert len(spy) == 0
     assert window.txt_char_in_byte.toPlainText() == "41"
 
@@ -86,14 +86,14 @@ def test_cursor_on_grapheme_boundaries(window, position, number, char):
     set_cursor(window, 7)
     set_cursor(window, position)
     assert window.txt_num_symbol.text() == number
-    assert window.txt_char_input.text() == char
+    assert window.txt_char_input.toPlainText() == char
 
 
 @pytest.mark.parametrize("anchor, position, expected", [(0, 1, "B"), (3, 1, "B"), (0, 3, "")])
 def test_selection_uses_active_cursor_and_preserves_selection(window, anchor, position, expected):
     window.txt_text_input.setPlainText("ABC")
     set_cursor(window, position, anchor)
-    assert window.txt_char_input.text() == expected
+    assert window.txt_char_input.toPlainText() == expected
     cursor = window.txt_text_input.textCursor()
     assert cursor.position() == position
     assert cursor.anchor() == anchor
@@ -104,7 +104,7 @@ def test_shift_right_selection(qtbot, window):
     window.txt_text_input.setPlainText("ABC")
     set_cursor(window, 0)
     qtbot.keyClick(window.txt_text_input, Qt.Key.Key_Right, Qt.KeyboardModifier.ShiftModifier)
-    assert window.txt_char_input.text() == "B"
+    assert window.txt_char_input.toPlainText() == "B"
     assert window.txt_text_input.textCursor().selectedText() == "A"
 
 
@@ -112,7 +112,7 @@ def test_empty_text_cursor(window):
     window.on_text_input_cursor_changed()
     assert window.get_grapheme_index_at_cursor(0) is None
     assert window.txt_num_symbol.text() == ""
-    assert window.txt_char_input.text() == ""
+    assert window.txt_char_input.toPlainText() == ""
 
 
 def test_clear_button_clears_every_output(qtbot, window):
@@ -125,7 +125,7 @@ def test_clear_button_clears_every_output(qtbot, window):
             assert value == "", widget.objectName()
     assert window.graphemes == []
     assert window.char_in_utf_2_char_input is False
-    window.txt_char_input.setText("A")
+    window.txt_char_input.setPlainText("A")
     assert window.txt_char_in_byte.toPlainText() == "41"
     assert window.txt_char_message.text() == window.char_message_text
 
@@ -135,7 +135,7 @@ def test_clear_character_fields_preserves_source_and_blocks_signal(window):
     spy = QSignalSpy(window.txt_char_input.textChanged)
     window.clear_char_fields()
     assert len(spy) == 0
-    assert window.txt_char_input.text() == ""
+    assert window.txt_char_input.toPlainText() == ""
     assert window.txt_char_in_utf.toPlainText() == "u+0041"
     assert window.txt_char_message.text() == ""
     assert window.txt_char_in_byte.toPlainText() == ""
@@ -164,3 +164,32 @@ def test_outputs_read_only(window):
     assert not window.txt_text_input.isReadOnly()
     assert not window.txt_char_input.isReadOnly()
     assert not window.txt_char_in_utf.isReadOnly()
+
+
+def test_character_input_is_plain_text_edit(window):
+    assert isinstance(window.txt_char_input, QPlainTextEdit)
+
+
+def test_enter_in_character_input_updates_details(window, qtbot):
+    window.txt_char_input.setPlainText("A")
+    cursor = window.txt_char_input.textCursor()
+    cursor.movePosition(QTextCursor.MoveOperation.End)
+    window.txt_char_input.setTextCursor(cursor)
+    qtbot.keyClick(window.txt_char_input, Qt.Key.Key_Return)
+    assert window.txt_char_input.toPlainText() == "A\n"
+    assert window.txt_char_in_utf.toPlainText() == "u+0041, u+000a"
+    assert window.txt_char_in_byte.toPlainText() == "41 0a"
+    assert window.txt_bytes_per_char.text() == "2"
+    assert "только один символ" in window.txt_char_message.text()
+
+
+@pytest.mark.parametrize("source, expected, hex_bytes", [
+    ("\u00a0", " ", "20"),
+    ("\r\n", "\n", "0a"),
+])
+def test_character_input_uses_normalized_plain_text(window, source, expected, hex_bytes):
+    """QPlainTextEdit.toPlainText нормализует NBSP и окончания строк."""
+    window.txt_char_input.setPlainText(source)
+    assert window.txt_char_input.toPlainText() == expected
+    assert window.txt_char_in_byte.toPlainText() == hex_bytes
+    assert window.txt_bytes_per_char.text() == "1"
